@@ -28,49 +28,7 @@ from pyspark.sql.types import IntegerType
 INPUT_FILE_NAME = "/data/var/incoming/capstone/movie_review.csv"
 
 def run_moviereviews_etl():
-
     go_spark() 
-    DATABASE_LOCATION = "sqlite:///my_played_tracks.sqlite"
-    DATABASE_NAME="moviereviews.sqlite"
-    movie_review_file="/data/var/incoming/capstone/movie_review.csv"
-    USER_ID = ''
-    TOKEN = ''
-
-    # Convert time to Unix timestamp in miliseconds      
-    today = datetime.datetime.now()
-    yesterday = today - datetime.timedelta(days=1)
-    yesterday_unix_timestamp = int(yesterday.timestamp()) * 1000
-
-
-    # Load
-    df = pd.read_csv("/data/var/incoming/", sep=";") 
-    #print(df.head())
-    
-
-    engine = sqlalchemy.create_engine(DATABASE_LOCATION)
-    conn = sqlite3.connect(DATABASE_NAME)
-    cursor = conn.cursor()
-
-    sql_query = """
-    CREATE TABLE IF NOT EXISTS my_played_tracks(
-        song_name VARCHAR(200),
-        artist_name VARCHAR(200),
-        played_at VARCHAR(200),
-        timestamp VARCHAR(200),
-        CONSTRAINT primary_key_constraint PRIMARY KEY (played_at)
-    )
-    """
-
-    cursor.execute(sql_query)
-    print("Opened database successfully")
-
-    try:
-        song_df.to_sql("my_played_tracks", engine, index=False, if_exists='append')
-    except:
-        print("Data already exists in the database")
-
-    conn.close()
-    print("Close database successfully")
 
 
 
