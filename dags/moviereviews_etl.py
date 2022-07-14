@@ -7,9 +7,29 @@ from datetime import datetime
 import datetime
 import sqlite3
 
+from pyspark.sql.types import StringType
+from pyspark.sql.types import BooleanType
+from pyspark.ml.feature import StopWordsRemover
+from pyspark.sql import functions as F
 
+from pyspark.sql import SparkSession
+import pyspark.sql.types as T
+from pyspark.ml.feature import Tokenizer, HashingTF, IDF
+from pyspark.ml.classification import LogisticRegression
+
+from pyspark.ml.feature import Tokenizer, RegexTokenizer
+from pyspark.sql.functions import col, udf
+from pyspark.sql.types import IntegerType
+
+
+
+
+# local constants
+INPUT_FILE_NAME = "/data/var/incoming/capstone/movie_review.csv"
 
 def run_moviereviews_etl():
+
+    go_spark() 
     DATABASE_LOCATION = "sqlite:///my_played_tracks.sqlite"
     DATABASE_NAME="moviereviews.sqlite"
     movie_review_file="/data/var/incoming/capstone/movie_review.csv"
@@ -56,23 +76,9 @@ def run_moviereviews_etl():
 
 
 
-
-from pyspark.sql import SparkSession
-import pyspark.sql.functions as F
-import pyspark.sql.types as T
-from pyspark.ml.feature import Tokenizer, HashingTF, IDF
-from pyspark.ml.classification import LogisticRegression
-
-from pyspark.ml.feature import Tokenizer, RegexTokenizer
-from pyspark.sql.functions import col, udf
-from pyspark.sql.types import IntegerType
-
-
-
-
-
-# Build a spark context
-hc = (SparkSession.builder
+def go_spark():
+    # Build a spark context
+    hc = (SparkSession.builder
                   .appName('Toxic Comment Classification')
                   .enableHiveSupport()
                   .config("spark.executor.memory", "4G")
@@ -85,35 +91,27 @@ hc = (SparkSession.builder
                   .config("spark.default.parallelism","2")
                   .getOrCreate())
 
+    df=to_spark_df(hc, INPUT_FILE_NAME)
+    tokenizer = Tokenizer(inputCol="review_str", outputCol="review_token")
+    tokenized = tokenizer.transform(df)
 
+    remover = StopWordsRemover(inputCol="review_token", outputCol="text_filtered")
+    cleaned_document = remover.transform(tokenized)
 
+    isThereAGoodToken = udf(lambda words: "good" in words, BooleanType())
 
-def go_spark():
-from pyspark.sql.types import StringType
-from pyspark.sql.types import BooleanType
-from pyspark.ml.feature import StopWordsRemover
-from pyspark.sql import functions as F
+    reviews =cleaned_document.withColumn("positive_review", isThereAGoodToken(col("text_filtered")))
 
-tokenizer = Tokenizer(inputCol="review_str", outputCol="review_token")
-tokenized = tokenizer.transform(df)
-
-remover = StopWordsRemover(inputCol="review_token", outputCol="text_filtered")
-cleaned_document = remover.transform(tokenized)
-
-isThereAGoodToken = udf(lambda words: "good" in words, BooleanType())
-
-reviews =cleaned_document.withColumn("positive_review", isThereAGoodToken(col("text_filtered")))
-
-df2=reviews.withColumn("positive_review",  F.when(
+    df2=reviews.withColumn("positive_review",  F.when(
             F.col("positive_review") == True,
             1
         ).otherwise( 0 ) )
 
-df3=df2.withColumn("insert_date", F.current_timestamp() )
-df3.coalesce(1).select("cid",  "positive_review","id_review").write.csv('reviews2.csv')
+    df3=df2.withColumn("insert_date", F.current_timestamp() )
+    df3.coalesce(1).select("cid",  "positive_review","id_review").write.csv('/tmp/reviews2.csv')
 
 
-def to_spark_df(fin):
+def to_spark_df(hc, fin):
     """
     Parse a filepath to a spark dataframe using the pandas api.
 
@@ -133,5 +131,4 @@ def to_spark_df(fin):
     return(df)
 
 
-df = to_spark_df("../input/moviereview/movie_review.csv")
 
