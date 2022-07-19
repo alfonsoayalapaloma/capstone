@@ -23,16 +23,8 @@ from pyspark.sql.functions import col, udf
 from pyspark.sql.types import IntegerType
 
 
-
-
 # local constants
 INPUT_FILE_NAME = "/data/var/incoming/capstone/movie_review.csv"
-
-def run_moviereviews_etl():
-    go_spark() 
-
-
-
 
 
 def go_spark():
@@ -91,3 +83,4 @@ def to_spark_df(hc, fin):
 
 
 
+go_spark()
