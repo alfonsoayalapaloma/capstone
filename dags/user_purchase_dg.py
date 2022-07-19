@@ -3,6 +3,8 @@ from datetime import timedelta
 from airflow import DAG
 from airflow.operators.postgres_operator import PostgresOperator
 from airflow.utils.dates import days_ago
+from contextlib import closing
+
 
 from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
@@ -64,24 +66,23 @@ def ingest_data_from_gcs(
         postgres_conn_id (str): Name of the postgres connection ID.
     """
     import tempfile
-
     gcs_hook = GCSHook(gcp_conn_id=gcp_conn_id)
     psql_hook = PostgresHook(postgres_conn_id)
-
     with tempfile.NamedTemporaryFile() as tmp:
         gcs_hook.download(
             bucket_name=gcs_bucket, object_name=gcs_object, filename=tmp.name
         )
-        #psql_hook.bulk_load(table=postgres_table, tmp_file=tmp.name)
         copy_sql = """
            COPY dbschema.user_purchase FROM stdin WITH CSV HEADER
            DELIMITER as ','
            """
-        path=tmp.name    
-        with open(path, 'r') as f:
-            psql_hook.copy_expert(sql=copy_sql, filename=f)
-
-
+        filename=tmp.name    
+        with open(filename, 'r+') as file:
+            with closing(psql_hook.get_conn()) as conn:
+                with closing(conn.cursor()) as cur:
+                    cur.copy_expert(copy_sql, file)
+                    file.truncate(file.tell())
+                    conn.commit()
 
 dag_psql = DAG(
     dag_id = "user_purchase_dag",
@@ -160,7 +161,7 @@ ingest_data = PythonOperator(
 
 
 
-delete_table >> create_table  >>  ingest_data >> insert_data
+delete_table >> create_table  >>  ingest_data 
 
 if __name__ == "__main__":
         dag_psql.cli()
