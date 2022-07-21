@@ -42,7 +42,7 @@ CLOUD_PROVIDER = "gcp"
 
 # GCP constants
 GCP_CONN_ID = "google_cloud_default"
-GCS_BUCKET_NAME = "movie_review_355411"
+GCS_BUCKET_NAME = "bucket-356805"
 GCS_KEY_NAME = "user_purchase.csv"
 
 # Postgres constants
