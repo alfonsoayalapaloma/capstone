@@ -138,11 +138,12 @@ export_pg_table = PythonOperator(
         python_callable=copy_to_gcs,
         op_kwargs={
             "copy_sql": "SELECT * FROM dbschema.user_purchase",
-            "file_name": "user_purchase_pro.csv",
+            "file_name": GCS_KEY_STAGE_NAME,
             "bucket_name": GCS_BUCKET_STAGE_NAME 
             }
         )
 start_workflow = DummyOperator(task_id="start_workflow",dag=dag)
+delete_staging = DummyOperator(task_id="delete_staging",dag=dag)
 create_dataset = BigQueryCreateEmptyDatasetOperator(task_id="create_dataset", dataset_id=DATASET_NAME, dag=dag)
 
 create_bq_table = BigQueryCreateExternalTableOperator(
@@ -165,7 +166,7 @@ create_bq_table = BigQueryCreateExternalTableOperator(
 
 
 
-start_workflow >> export_pg_table >> create_dataset >> create_bq_table 
+start_workflow >> delete_staging >> export_pg_table >> create_dataset >> create_bq_table 
 
 if __name__ == "__main__":
         dag.cli()
