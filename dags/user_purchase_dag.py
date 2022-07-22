@@ -100,69 +100,6 @@ dag = DAG(
 )
 
 
-create_table_sql_query = """ 
-create schema dbschema;
-ALTER SCHEMA dbschema OWNER TO dbuser;
-CREATE TABLE dbschema.user_purchase (
-   invoice_number varchar(10),
-   stock_code varchar(20),
-   detail varchar(1000),
-   quantity int,
-   invoice_date timestamp,
-   unit_price numeric(8,3),
-   customer_id int,
-   country varchar(20)
-)
-;
-"""
-
-
-delete_table_sql_query="""
-drop schema if exists dbschema cascade;
-drop table if exists dbschema.user_purchase ;
-"""
-
-insert_data_sql_query = """
-COPY dbschema.user_purchase(invoice_number, stock_code, detail, quantity, invoice_date, unit_price, customer_id, country)
-FROM '/data/var/incoming/capstone/user_purchase.csv'
-DELIMITER ','
-CSV HEADER;
-"""
-
-
-delete_table = PostgresOperator(
-    sql = delete_table_sql_query,
-    task_id = "delete_table_task",
-    postgres_conn_id = "postgres_local",
-    dag = dag_psql
-    )
-
-create_table = PostgresOperator(
-    sql = create_table_sql_query,
-    task_id = "create_table_task",
-    postgres_conn_id = "postgres_local",
-    dag = dag_psql
-    )
-
-insert_data = PostgresOperator(
-    sql = insert_data_sql_query,
-    task_id = "insert_data_task",
-    postgres_conn_id = "postgres_local",
-    dag = dag_psql
-    )
-    
-ingest_data = PythonOperator(
-        task_id="ingest_data",
-        python_callable=ingest_data_from_gcs,
-        op_kwargs={
-            "gcp_conn_id": GCP_CONN_ID,
-            "postgres_conn_id": POSTGRES_CONN_ID,
-            "gcs_bucket": GCS_BUCKET_NAME,
-            "gcs_object": GCS_KEY_NAME,
-            "postgres_table": POSTGRES_TABLE_NAME,
-        },
-        trigger_rule=TriggerRule.ONE_SUCCESS,
-    )    
 
 def copy_to_gcs(copy_sql, file_name, bucket_name):
     gcs_hook = GoogleCloudStorageHook(GCP_CONN_ID)
@@ -189,9 +126,10 @@ export_pg_table = python_operator.PythonOperator(
             }
         )
 start_workflow = DummyOperator(task_id="start_workflow",dag=dag)
-create_dataset = BigQueryCreateEmptyDatasetOperator(task_id="create_dataset", dataset_id=DATASET_NAME)
+create_dataset = BigQueryCreateEmptyDatasetOperator(task_id="create_dataset", dataset_id=DATASET_NAME, dag=dag)
 
 create_bq_table = BigQueryCreateExternalTableOperator(
+    dag=dag,
     task_id="create_bq_table",
     destination_project_dataset_table=f"{DATASET_NAME}.user_purchase",
     bucket=GCS_BUCKET_STAGE_NAME,
@@ -213,4 +151,4 @@ create_bq_table = BigQueryCreateExternalTableOperator(
 start_workflow >> export_pg_table >> create_dataset >> create_bq_table 
 
 if __name__ == "__main__":
-        dag_psql.cli()
+        dag.cli()
