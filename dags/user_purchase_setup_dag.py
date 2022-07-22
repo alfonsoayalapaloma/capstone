@@ -85,7 +85,7 @@ def ingest_data_from_gcs(
                     conn.commit()
 
 dag_psql = DAG(
-    dag_id = "user_purchase_dag",
+    dag_id = "user_purchase_setup_dag",
     default_args=args,
     # schedule_interval='0 0 * * *',
     schedule_interval='@once',	
