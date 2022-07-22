@@ -22,6 +22,8 @@ from airflow.providers.google.cloud.transfers.local_to_gcs import LocalFilesyste
 from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
 from airflow.operators.sql import BranchSQLOperator
+import logging
+from tempfile import NamedTemporaryFile
 
 from airflow.contrib.hooks.gcs_hook import GoogleCloudStorageHook
 from airflow.providers.google.cloud.hooks.gcs import GCSHook
