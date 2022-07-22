@@ -14,6 +14,7 @@ from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryUpdateTableOperator,
     BigQueryUpdateTableSchemaOperator,
     BigQueryUpsertTableOperator,
+    BigQueryCreateExternalTableOperator,    
 )
 from airflow.providers.google.cloud.operators.gcs import GCSCreateBucketOperator, GCSDeleteBucketOperator
 from airflow.providers.google.cloud.transfers.local_to_gcs import LocalFilesystemToGCSOperator
