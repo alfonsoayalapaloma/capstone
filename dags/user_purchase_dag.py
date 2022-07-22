@@ -137,7 +137,7 @@ export_pg_table = PythonOperator(
         task_id="copy_to_gcs",
         python_callable=copy_to_gcs,
         op_kwargs={
-            "copy_sql": "COPY (SELECT * FROM dbschema.user_purchase) TO STDOUT",
+            "copy_sql": "COPY (SELECT * FROM dbschema.user_purchase) TO STDOUT WITH (FORMAT csv, DELIMITER ',', QUOTE '^', HEADER FALSE)",
             "file_name": GCS_KEY_STAGE_NAME,
             "bucket_name": GCS_BUCKET_STAGE_NAME 
             }
