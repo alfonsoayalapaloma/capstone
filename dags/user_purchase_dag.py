@@ -152,6 +152,8 @@ create_bq_table = BigQueryCreateExternalTableOperator(
     destination_project_dataset_table=f"{DATASET_NAME}.user_purchase",
     bucket=GCS_BUCKET_STAGE_NAME,
     source_objects=[GCS_KEY_STAGE_NAME],
+    quote_character="^",
+    field_delimiter=",",
     schema_fields=[
         {"name": "invoice_number", "type": "STRING", "mode": "REQUIRED"},
         {"name": "stock_code", "type": "STRING", "mode": "REQUIRED"},
