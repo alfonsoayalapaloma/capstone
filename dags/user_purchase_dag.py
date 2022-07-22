@@ -4,7 +4,19 @@ from airflow import DAG
 from airflow.operators.postgres_operator import PostgresOperator
 from airflow.utils.dates import days_ago
 from contextlib import closing
-
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryCreateEmptyDatasetOperator,
+    BigQueryCreateEmptyTableOperator,
+    BigQueryDeleteDatasetOperator,
+    BigQueryDeleteTableOperator,
+    BigQueryGetDatasetTablesOperator,
+    BigQueryUpdateDatasetOperator,
+    BigQueryUpdateTableOperator,
+    BigQueryUpdateTableSchemaOperator,
+    BigQueryUpsertTableOperator,
+)
+from airflow.providers.google.cloud.operators.gcs import GCSCreateBucketOperator, GCSDeleteBucketOperator
+from airflow.providers.google.cloud.transfers.local_to_gcs import LocalFilesystemToGCSOperator
 
 from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
