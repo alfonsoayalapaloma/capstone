@@ -74,40 +74,6 @@ POSTGRES_TABLE_NAME = "user_purchase"
 DATASET_NAME="movieds"
 
 
-def ingest_data_from_gcs(
-    gcs_bucket: str,
-    gcs_object: str,
-    postgres_table: str,
-    gcp_conn_id: str = "google_cloud_default",
-    postgres_conn_id: str = "postgres_default",
-):
-    """Ingest data from an GCS location into a postgres table.
-    Args:
-        gcs_bucket (str): Name of the bucket.
-        gcs_object (str): Name of the object.
-        postgres_table (str): Name of the postgres table.
-        gcp_conn_id (str): Name of the Google Cloud connection ID.
-        postgres_conn_id (str): Name of the postgres connection ID.
-    """
-    import tempfile
-    gcs_hook = GCSHook(gcp_conn_id=gcp_conn_id)
-    psql_hook = PostgresHook(postgres_conn_id)
-    with tempfile.NamedTemporaryFile() as tmp:
-        gcs_hook.download(
-            bucket_name=gcs_bucket, object_name=gcs_object, filename=tmp.name
-        )
-        copy_sql = """
-           COPY dbschema.user_purchase FROM stdin WITH CSV HEADER
-           DELIMITER as ','
-           """
-        filename=tmp.name    
-        with open(filename, 'r+') as file:
-            with closing(psql_hook.get_conn()) as conn:
-                with closing(conn.cursor()) as cur:
-                    cur.copy_expert(copy_sql, file)
-                    file.truncate(file.tell())
-                    conn.commit()
-
 dag = DAG(
     dag_id = "classified_movie_review_dag",
     default_args=args,
@@ -118,32 +84,6 @@ dag = DAG(
     start_date = airflow.utils.dates.days_ago(1)
 )
 
-
-
-def copy_to_gcs(copy_sql, file_name, bucket_name):
-    gcs_hook = GoogleCloudStorageHook(GCP_CONN_ID)
-    pg_hook = PostgresHook.get_hook(POSTGRES_CONN_ID)
-
-    with NamedTemporaryFile(suffix=".csv") as temp_file:
-        temp_name = temp_file.name
-
-        logging.info("Exporting query to file '%s'", temp_name)
-        pg_hook.copy_expert(copy_sql, filename=temp_name)
-
-        logging.info("Uploading to %s/%s", bucket_name, file_name)
-        gcs_hook.upload(bucket_name, file_name, temp_name)
-
-
-export_pg_table = PythonOperator(
-        dag=dag,
-        task_id="copy_to_gcs",
-        python_callable=copy_to_gcs,
-        op_kwargs={
-            "copy_sql": "COPY (SELECT * FROM dbschema.user_purchase) TO STDOUT WITH (FORMAT csv, DELIMITER ',', QUOTE '^', HEADER FALSE)",
-            "file_name": GCS_KEY_STAGE_NAME,
-            "bucket_name": GCS_BUCKET_STAGE_NAME 
-            }
-        )
 start_workflow = DummyOperator(task_id="start_workflow",dag=dag)
 delete_staging = DummyOperator(task_id="delete_staging",dag=dag)
 create_dataset = BigQueryCreateEmptyDatasetOperator(task_id="create_dataset", dataset_id=DATASET_NAME, dag=dag)
