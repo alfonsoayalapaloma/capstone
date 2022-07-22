@@ -115,7 +115,7 @@ def copy_to_gcs(copy_sql, file_name, bucket_name):
         gcs_hook.upload(bucket_name, file_name, temp_name)
 
 
-export_pg_table = python_operator.PythonOperator(
+export_pg_table = PythonOperator(
         dag=dag,
         task_id="copy_to_gcs",
         python_callable=copy_to_gcs,
