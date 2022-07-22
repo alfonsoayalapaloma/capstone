@@ -157,7 +157,7 @@ create_bq_table = BigQueryCreateExternalTableOperator(
         {"name": "stock_code", "type": "STRING", "mode": "REQUIRED"},
         {"name": "detail", "type": "STRING", "mode": "REQUIRED"},
         {"name": "quantity", "type": "INTEGER", "mode": "REQUIRED"},
-        {"name": "invoice_date", "type": "DATE", "mode": "REQUIRED"},
+        {"name": "invoice_date", "type": "DATETIME", "mode": "REQUIRED"},
         {"name": "unit_price", "type": "NUMERIC", "mode": "REQUIRED"},
         {"name": "customer_id", "type": "INTEGER", "mode": "REQUIRED"},
         {"name": "country", "type": "STRING", "mode": "NULLABLE"},
