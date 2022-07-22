@@ -23,7 +23,7 @@ from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
 from airflow.operators.sql import BranchSQLOperator
 
-from airflow.providers.google.cloud.hooks.gcs import GoogleCloudStorageHook 
+from airflow.contrib.hooks.gcs_hook import GoogleCloudStorageHook
 from airflow.providers.google.cloud.hooks.gcs import GCSHook
 from airflow.providers.google.cloud.sensors.gcs import GCSObjectExistenceSensor
 from airflow.providers.postgres.hooks.postgres import PostgresHook
