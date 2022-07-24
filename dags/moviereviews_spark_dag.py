@@ -3,18 +3,26 @@ import os
 import datetime
 from airflow import models
 from airflow.providers.google.cloud.operators.dataproc import (
+   
    DataprocCreateClusterOperator,
    DataprocDeleteClusterOperator,
    DataprocSubmitJobOperator
 )
+
+
+from airflow.providers.google.cloud.operators.kubernetes_engine import (
+    GKECreateClusterOperator,
+    GKEDeleteClusterOperator,
+)
+
 from airflow.providers.google.cloud.sensors.dataproc import DataprocJobSensor
 from airflow.utils.dates import days_ago
 
 PROJECT_ID = "capstone-356805"
-CLUSTER_NAME =  "dataproc-cluster-356805"
+#CLUSTER_NAME =  "dataproc-cluster-356805"
 REGION = "us-central1"
 ZONE = "us-central1-a" 
-GKE_CLUSTER_NAME="airflow-gke-data-bootcamp"
+#GKE_CLUSTER_NAME="airflow-gke-data-bootcamp"
 PYSPARK_URI = "gs://bucket-356805/moviereviews_sparkapp.py"
 STAGING_BUCKET="bucket-stage-356805"
 
@@ -40,7 +48,16 @@ CLUSTER_CONFIG = {
        "disk_config": {"boot_disk_type": "pd-standard", "boot_disk_size_gb": 1024},
    },
 }
+CLUSTER_NAME = f"cluster-test-build-in-gke{PROJECT_ID}"
+GKE_CLUSTER_NAME = f"test-dataproc-gke-cluster-{PROJECT_ID}"
 
+GKE_CLUSTER_CONFIG = {
+    "name": GKE_CLUSTER_NAME,
+    "workload_identity_config": {
+        "workload_pool": f"{PROJECT_ID}.svc.id.goog",
+    },
+    "initial_node_count": 1,
+}
 
 VIRTUAL_CLUSTER_CONFIG = {
     "kubernetes_cluster_config": {
@@ -65,13 +82,21 @@ with models.DAG(
    schedule_interval=datetime.timedelta(days=1),
    default_args=default_dag_args) as dag:
 
+   create_gke_cluster = GKECreateClusterOperator(
+        task_id="create_gke_cluster",
+        project_id=PROJECT_ID,
+        location=REGION,
+        body=GKE_CLUSTER_CONFIG,
+
+    )
+
    create_cluster = DataprocCreateClusterOperator(
        task_id="create_cluster_in_gke",
        project_id=PROJECT_ID,
        region=REGION,
        cluster_name=CLUSTER_NAME,
-       cluster_config=VIRTUAL_CLUSTER_CONFIG,
-       #virtual_cluster_config=VIRTUAL_CLUSTER_CONFIG,
+       #cluster_config=VIRTUAL_CLUSTER_CONFIG,
+       virtual_cluster_config=VIRTUAL_CLUSTER_CONFIG,
    )
 
    PYSPARK_JOB = {
