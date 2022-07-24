@@ -55,7 +55,7 @@ VIRTUAL_CLUSTER_CONFIG = {
         },
         "kubernetes_software_config": {"component_version": {"SPARK": b'3'}},
     },
-    "staging_bucket": "{STAGING_BUCKET}",
+    "staging_bucket": f"{STAGING_BUCKET}",
 }
 
 
@@ -65,13 +65,13 @@ with models.DAG(
    schedule_interval=datetime.timedelta(days=1),
    default_args=default_dag_args) as dag:
 
-   # [START how_to_cloud_dataproc_create_cluster_operator]
    create_cluster = DataprocCreateClusterOperator(
        task_id="create_cluster_in_gke",
        project_id=PROJECT_ID,
        region=REGION,
        cluster_name=CLUSTER_NAME,
-       virtual_cluster_config=VIRTUAL_CLUSTER_CONFIG,
+       cluster_config=VIRTUAL_CLUSTER_CONFIG,
+       #virtual_cluster_config=VIRTUAL_CLUSTER_CONFIG,
    )
 
    PYSPARK_JOB = {
