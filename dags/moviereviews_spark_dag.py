@@ -14,7 +14,7 @@ PROJECT_ID = "capstone-356805"
 CLUSTER_NAME =  "dataproc-cluster-356805"
 REGION = "us-central1"
 ZONE = "us-central1-a"
-PYSPARK_URI = "gs://bucket-356805/user_purchase.csv"
+PYSPARK_URI = "gs://bucket-356805/moviereviews_sparkapp.py"
 
 YESTERDAY = datetime.datetime.now() - datetime.timedelta(days=1)
 
