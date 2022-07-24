@@ -13,7 +13,8 @@ from airflow.utils.dates import days_ago
 PROJECT_ID = "capstone-356805"
 CLUSTER_NAME =  "dataproc-cluster-356805"
 REGION = "us-central1"
-ZONE = "us-central1-a"
+ZONE = "us-central1-a" 
+GKE_CLUSTER_NAME="airflow-gke-data-bootcamp"
 PYSPARK_URI = "gs://bucket-356805/moviereviews_sparkapp.py"
 
 YESTERDAY = datetime.datetime.now() - datetime.timedelta(days=1)
@@ -39,6 +40,25 @@ CLUSTER_CONFIG = {
    },
 }
 
+
+VIRTUAL_CLUSTER_CONFIG = {
+    "kubernetes_cluster_config": {
+        "gke_cluster_config": {
+            "gke_cluster_target": f"projects/{PROJECT_ID}/locations/{REGION}/clusters/{GKE_CLUSTER_NAME}",
+            "node_pool_target": [
+                {
+                    "node_pool": f"projects/{PROJECT_ID}/locations/{REGION}/clusters/{GKE_CLUSTER_NAME}/nodePools/dp",  # noqa
+                    "roles": ["DEFAULT"],
+                }
+            ],
+        },
+        "kubernetes_software_config": {"component_version": {"SPARK": b'3'}},
+    },
+    "staging_bucket": "test-staging-bucket",
+}
+
+
+
 with models.DAG(
    "moviereviews_spark_dag",
    schedule_interval=datetime.timedelta(days=1),
@@ -46,11 +66,11 @@ with models.DAG(
 
    # [START how_to_cloud_dataproc_create_cluster_operator]
    create_cluster = DataprocCreateClusterOperator(
-       task_id="create_cluster",
+       task_id="create_cluster_in_gke",
        project_id=PROJECT_ID,
-       cluster_config=CLUSTER_CONFIG,
        region=REGION,
        cluster_name=CLUSTER_NAME,
+       virtual_cluster_config=VIRTUAL_CLUSTER_CONFIG,
    )
 
    PYSPARK_JOB = {
