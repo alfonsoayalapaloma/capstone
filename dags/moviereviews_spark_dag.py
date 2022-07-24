@@ -16,6 +16,7 @@ REGION = "us-central1"
 ZONE = "us-central1-a" 
 GKE_CLUSTER_NAME="airflow-gke-data-bootcamp"
 PYSPARK_URI = "gs://bucket-356805/moviereviews_sparkapp.py"
+STAGING_BUCKET="bucket-stage-356805"
 
 YESTERDAY = datetime.datetime.now() - datetime.timedelta(days=1)
 
@@ -54,7 +55,7 @@ VIRTUAL_CLUSTER_CONFIG = {
         },
         "kubernetes_software_config": {"component_version": {"SPARK": b'3'}},
     },
-    "staging_bucket": "test-staging-bucket",
+    "staging_bucket": "{STAGING_BUCKET}",
 }
 
 
