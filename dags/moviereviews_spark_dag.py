@@ -10,13 +10,11 @@ from airflow.providers.google.cloud.operators.dataproc import (
 from airflow.providers.google.cloud.sensors.dataproc import DataprocJobSensor
 from airflow.utils.dates import days_ago
 
-PROJECT_ID = "composer-355411"
-CLUSTER_NAME =  "dataproc-cluster-355411"
+PROJECT_ID = "capstone-356805"
+CLUSTER_NAME =  "dataproc-cluster-356805"
 REGION = "us-central1"
 ZONE = "us-central1-a"
-PYSPARK_URI = "gs://us-central1-composer-env-537ac6aa-bucket/dags/moviereviews_sparkapp.py"
-#https://storage.cloud.google.com/us-central1-composer-env-537ac6aa-bucket/dags/moviereviews_sparkapp.py
-#gs://us-central1-composer-env-537ac6aa-bucket/dags/moviereviews_sparkapp.py
+PYSPARK_URI = "gs://bucket-356805/user_purchase.csv"
 
 YESTERDAY = datetime.datetime.now() - datetime.timedelta(days=1)
 
@@ -70,6 +68,10 @@ with models.DAG(
     project_id=PROJECT_ID,
     cluster_name=CLUSTER_NAME,
     region=REGION,
-)
+   )
 
-   create_cluster >>  pyspark_task >> delete_cluster 
+create_cluster >>  pyspark_task >> delete_cluster 
+
+if __name__ == "__main__":
+        dag.cli()
+

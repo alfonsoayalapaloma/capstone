@@ -80,7 +80,4 @@ def to_spark_df(hc, fin):
     df.fillna("", inplace=True)
     df = hc.createDataFrame(df)
     return(df)
-
-
-
 go_spark()
