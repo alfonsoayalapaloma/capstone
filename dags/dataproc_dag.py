@@ -132,7 +132,7 @@ SPARK_JOB = {
 
 
 
-PYSPARK_URI=""
+PYSPARK_URI="gs://bucket-356805/moviereviews_sparkapp.py"
 # [START how_to_cloud_dataproc_pyspark_config]
 PYSPARK_JOB = {
     "reference": {"project_id": PROJECT_ID},
