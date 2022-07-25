@@ -61,12 +61,12 @@ SPARKR_URI = f"gs://{BUCKET}/{SPARKR_MAIN}"
 CLUSTER_CONFIG = {
     "master_config": {
         "num_instances": 1,
-        "machine_type_uri": "n1-standard-4",
+        "machine_type_uri": "n1-standard-1",
         "disk_config": {"boot_disk_type": "pd-standard", "boot_disk_size_gb": 1024},
     },
     "worker_config": {
         "num_instances": 2,
-        "machine_type_uri": "n1-standard-4",
+        "machine_type_uri": "n1-standard-1",
         "disk_config": {"boot_disk_type": "pd-standard", "boot_disk_size_gb": 1024},
     },
 }
@@ -80,8 +80,8 @@ path = "gs://goog-dataproc-initialization-actions-us-central1/python/pip-install
 CLUSTER_GENERATOR_CONFIG = ClusterGenerator(
     project_id="test",
     zone="us-central1-a",
-    master_machine_type="n1-standard-4",
-    worker_machine_type="n1-standard-4",
+    master_machine_type="n1-standard-1",
+    worker_machine_type="n1-standard-1",
     num_workers=2,
     storage_bucket="test",
     init_actions_uris=[path],
@@ -130,6 +130,9 @@ SPARK_JOB = {
 }
 # [END how_to_cloud_dataproc_spark_config]
 
+
+
+PYSPARK_URI=""
 # [START how_to_cloud_dataproc_pyspark_config]
 PYSPARK_JOB = {
     "reference": {"project_id": PROJECT_ID},
@@ -154,9 +157,13 @@ with models.DAG(
     )
     # [END how_to_cloud_dataproc_create_cluster_operator]
 
-    spark_task = DataprocSubmitJobOperator(
-        task_id="spark_task", job=SPARK_JOB, region=REGION, project_id=PROJECT_ID
+
+    # [START how_to_cloud_dataproc_submit_job_to_cluster_operator]
+    pyspark_task = DataprocSubmitJobOperator(
+        task_id="pyspark_task", job=PYSPARK_JOB, region=REGION, project_id=PROJECT_ID
     )
+    # [END how_to_cloud_dataproc_submit_job_to_cluster_operator]
+
 
     # [START how_to_cloud_dataproc_delete_cluster_operator]
     delete_cluster = DataprocDeleteClusterOperator(
@@ -164,5 +171,5 @@ with models.DAG(
     )
     # [END how_to_cloud_dataproc_delete_cluster_operator]
 
-    create_cluster >> spark_task >> delete_cluster
+    create_cluster >> pyspark_task >> delete_cluster
 
