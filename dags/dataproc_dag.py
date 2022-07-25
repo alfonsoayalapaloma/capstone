@@ -50,7 +50,7 @@ SPARKR_URI = f"gs://{BUCKET}/{SPARKR_MAIN}"
 
 
 GS_OUTPUT_FILE="moviereview"
-GS_BUCKET="bucket-staging-356805"
+GS_BUCKET="bucket-stage-356805"
 PYSPARK_URI="gs://bucket-356805/moviereviews_sparkapp.py"
 
 
