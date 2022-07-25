@@ -22,7 +22,8 @@ from airflow.providers.google.cloud.operators.dataproc import (
     DataprocUpdateClusterOperator,
 )
 from airflow.providers.google.cloud.sensors.dataproc import DataprocJobSensor
-
+from airflow.providers.google.cloud.operators.gcs import GoogleCloudStorageDeleteOperator 
+from airflow.providers.google.cloud.operators.gcs import GCSDeleteObjectsOperator
 
 
 PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "capstone-356805")
