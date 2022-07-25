@@ -52,6 +52,7 @@ SPARKR_URI = f"gs://{BUCKET}/{SPARKR_MAIN}"
 GS_OUTPUT_FILE="moviereview"
 GS_BUCKET="bucket-stage-356805"
 PYSPARK_URI="gs://bucket-356805/moviereviews_sparkapp.py"
+GCP_CONN_ID = "google_cloud_default"
 
 
 # Cluster definition
@@ -106,7 +107,7 @@ with models.DAG(
     #)
 
     def delete_obj():
-         hook = GCSHook()
+         hook = GCSHook( google_cloud_storage_conn_id=GCP_CONN_ID )
          hook.delete(bucket_name=GS_BUCKET, object_name=GS_OUTPUT_FILE)
 
     gcs_delete_temp = python.PythonOperator(
