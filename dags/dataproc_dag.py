@@ -30,6 +30,8 @@ from airflow.providers.google.cloud.operators.gcs import (
     GCSListObjectsOperator,
     GCSObjectCreateAclEntryOperator,
 )
+from airflow.providers.google.cloud.hooks.gcs import GCSHook
+from airflow.operators import python
 
 from airflow.providers.google.cloud.sensors.dataproc import DataprocJobSensor
 
@@ -99,9 +101,19 @@ with models.DAG(
     )
     # [END how_to_cloud_dataproc_create_cluster_operator]
 
-    gcs_delete_temp = GCSDeleteObjectsOperator(
-        task_id="delete_files", bucket_name=GS_BUCKET, objects=[GS_OUTPUT_FILE]
-    )
+    #gcs_delete_temp = GCSDeleteObjectsOperator(
+    #    task_id="delete_files", bucket_name=GS_BUCKET, objects=[GS_OUTPUT_FILE]
+    #)
+
+    def delete_obj():
+         hook = GCSHook()
+         hook.delete(bucket_name=GS_BUCKET, object_name=GS_OUTPUT_FILE)
+
+     test_delete = python.PythonOperator(
+            task_id='delete_gcs_obj',
+            provide_context=True,
+            python_callable=delete_obj,
+            )
 
 
     # [START how_to_cloud_dataproc_submit_job_to_cluster_operator]
