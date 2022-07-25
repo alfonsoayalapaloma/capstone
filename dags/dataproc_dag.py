@@ -109,7 +109,7 @@ with models.DAG(
          hook = GCSHook()
          hook.delete(bucket_name=GS_BUCKET, object_name=GS_OUTPUT_FILE)
 
-     test_delete = python.PythonOperator(
+    gcs_delete_temp = python.PythonOperator(
             task_id='delete_gcs_obj',
             provide_context=True,
             python_callable=delete_obj,
