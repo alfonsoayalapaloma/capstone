@@ -21,6 +21,16 @@ from airflow.providers.google.cloud.operators.dataproc import (
     DataprocSubmitJobOperator,
     DataprocUpdateClusterOperator,
 )
+from airflow.providers.google.cloud.operators.gcs import (
+    GCSBucketCreateAclEntryOperator,
+    GCSCreateBucketOperator,
+    GCSDeleteBucketOperator,
+    GCSDeleteObjectsOperator,
+    GCSFileTransformOperator,
+    GCSListObjectsOperator,
+    GCSObjectCreateAclEntryOperator,
+)
+
 from airflow.providers.google.cloud.sensors.dataproc import DataprocJobSensor
 from airflow.providers.google.cloud.operators.gcs import GoogleCloudStorageDeleteOperator 
 from airflow.providers.google.cloud.operators.gcs import GCSDeleteObjectsOperator
@@ -91,10 +101,8 @@ with models.DAG(
     )
     # [END how_to_cloud_dataproc_create_cluster_operator]
 
-    gcs_delete_temp = GoogleCloudStorageDeleteOperator(
-        task_id="gcs_delete_temp",
-        bucket_name=GS_BUCKET,
-        prefix= GS_OUTPUT_FILE 
+    gcs_delete_temp = GCSDeleteObjectsOperator(
+        task_id="delete_files", bucket_name=GS_BUCKET, objects=[GS_OUTPUT_FILE]
     )
 
 
