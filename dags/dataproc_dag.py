@@ -61,13 +61,13 @@ SPARKR_URI = f"gs://{BUCKET}/{SPARKR_MAIN}"
 CLUSTER_CONFIG = {
     "master_config": {
         "num_instances": 1,
-        "machine_type_uri": "n1-standard-1",
-        "disk_config": {"boot_disk_type": "pd-standard", "boot_disk_size_gb": 1024},
+        "machine_type_uri": "n2-standard-2",
+        "disk_config": {"boot_disk_type": "pd-standard", "boot_disk_size_gb": 500},
     },
     "worker_config": {
         "num_instances": 2,
-        "machine_type_uri": "n1-standard-1",
-        "disk_config": {"boot_disk_type": "pd-standard", "boot_disk_size_gb": 1024},
+        "machine_type_uri": "n2-standard-2",
+        "disk_config": {"boot_disk_type": "pd-standard", "boot_disk_size_gb": 500},
     },
 }
 
@@ -97,40 +97,10 @@ create_cluster_operator = DataprocCreateClusterOperator(
 )
 # [END how_to_cloud_dataproc_create_cluster_generate_cluster_config]
 
-# Update options
-# [START how_to_cloud_dataproc_updatemask_cluster_operator]
-CLUSTER_UPDATE = {
-    "config": {"worker_config": {"num_instances": 3}, "secondary_worker_config": {"num_instances": 3}}
-}
-UPDATE_MASK = {
-    "paths": ["config.worker_config.num_instances", "config.secondary_worker_config.num_instances"]
-}
-# [END how_to_cloud_dataproc_updatemask_cluster_operator]
 
 TIMEOUT = {"seconds": 1 * 24 * 60 * 60}
 
 # Jobs definitions
-
-# [START how_to_cloud_dataproc_sparksql_config]
-SPARK_SQL_JOB = {
-    "reference": {"project_id": PROJECT_ID},
-    "placement": {"cluster_name": CLUSTER_NAME},
-    "spark_sql_job": {"query_list": {"queries": ["SHOW DATABASES;"]}},
-}
-# [END how_to_cloud_dataproc_sparksql_config]
-
-# [START how_to_cloud_dataproc_spark_config]
-SPARK_JOB = {
-    "reference": {"project_id": PROJECT_ID},
-    "placement": {"cluster_name": CLUSTER_NAME},
-    "spark_job": {
-        "jar_file_uris": ["file:///usr/lib/spark/examples/jars/spark-examples.jar"],
-        "main_class": "org.apache.spark.examples.SparkPi",
-    },
-}
-# [END how_to_cloud_dataproc_spark_config]
-
-
 
 PYSPARK_URI="gs://bucket-356805/moviereviews_sparkapp.py"
 # [START how_to_cloud_dataproc_pyspark_config]
