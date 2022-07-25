@@ -92,13 +92,13 @@ with models.DAG(
     catchup=False,
 ) as dag:
     # [START how_to_cloud_dataproc_create_cluster_operator]
-    create_cluster = DataprocCreateClusterOperator(
-        task_id="create_cluster",
-        project_id=PROJECT_ID,
-        cluster_config=CLUSTER_CONFIG,
-        region=REGION,
-        cluster_name=CLUSTER_NAME,
-    )
+    #create_cluster = DataprocCreateClusterOperator(
+    #    task_id="create_cluster",
+    #    project_id=PROJECT_ID,
+    #    cluster_config=CLUSTER_CONFIG,
+    #    region=REGION,
+    #    cluster_name=CLUSTER_NAME,
+    #)
     # [END how_to_cloud_dataproc_create_cluster_operator]
 
     #gcs_delete_temp = GCSDeleteObjectsOperator(
@@ -129,5 +129,6 @@ with models.DAG(
     )
     # [END how_to_cloud_dataproc_delete_cluster_operator]
 
-    create_cluster >> gcs_delete_temp >> pyspark_task >> delete_cluster
+    #create_cluster >> gcs_delete_temp >> pyspark_task >> delete_cluster
+    gcs_delete_temp >> pyspark_task >> delete_cluster
 
