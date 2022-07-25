@@ -1,23 +1,5 @@
-#
-# Licensed to the Apache Software Foundation (ASF) under one
-# or more contributor license agreements.  See the NOTICE file
-# distributed with this work for additional information
-# regarding copyright ownership.  The ASF licenses this file
-# to you under the Apache License, Version 2.0 (the
-# "License"); you may not use this file except in compliance
-# with the License.  You may obtain a copy of the License at
-#
-#   http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on an
-# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-# KIND, either express or implied.  See the License for the
-# specific language governing permissions and limitations
-# under the License.
 """
-Example Airflow DAG that show how to use various Dataproc
-operators to manage a cluster and submit jobs.
+Airflow DAG to submit pyspark processes to a Dataproc cluster
 """
 
 import os
@@ -44,7 +26,7 @@ from airflow.providers.google.cloud.sensors.dataproc import DataprocJobSensor
 
 
 PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "capstone-356805")
-CLUSTER_NAME = os.environ.get("GCP_DATAPROC_CLUSTER_NAME", "example-cluster")
+CLUSTER_NAME = os.environ.get("GCP_DATAPROC_CLUSTER_NAME", "capstone-356805-cluster")
 REGION = os.environ.get("GCP_LOCATION", "europe-west1")
 ZONE = os.environ.get("GCP_REGION", "europe-west1-b")
 BUCKET = os.environ.get("GCP_DATAPROC_BUCKET", "dataproc-system-tests")
@@ -54,6 +36,12 @@ PYSPARK_MAIN = os.environ.get("PYSPARK_MAIN", "hello_world.py")
 PYSPARK_URI = f"gs://{BUCKET}/{PYSPARK_MAIN}"
 SPARKR_MAIN = os.environ.get("SPARKR_MAIN", "hello_world.R")
 SPARKR_URI = f"gs://{BUCKET}/{SPARKR_MAIN}"
+
+
+GS_OUTPUT_FILE="moviereview"
+GS_BUCKET="bucket-staging-356805"
+PYSPARK_URI="gs://bucket-356805/moviereviews_sparkapp.py"
+
 
 # Cluster definition
 # [START how_to_cloud_dataproc_create_cluster]
@@ -73,36 +61,11 @@ CLUSTER_CONFIG = {
 
 # [END how_to_cloud_dataproc_create_cluster]
 
-# Cluster definition: Generating Cluster Config for DataprocCreateClusterOperator
-# [START how_to_cloud_dataproc_create_cluster_generate_cluster_config]
-path = "gs://goog-dataproc-initialization-actions-us-central1/python/pip-install.sh"
-
-CLUSTER_GENERATOR_CONFIG = ClusterGenerator(
-    project_id="test",
-    zone="us-central1-a",
-    master_machine_type="n1-standard-1",
-    worker_machine_type="n1-standard-1",
-    num_workers=2,
-    storage_bucket="test",
-    init_actions_uris=[path],
-    metadata={'PIP_PACKAGES': 'pyyaml requests pandas openpyxl'},
-).make()
-
-create_cluster_operator = DataprocCreateClusterOperator(
-    task_id='create_dataproc_cluster',
-    cluster_name="test",
-    project_id="test",
-    region="us-central1",
-    cluster_config=CLUSTER_GENERATOR_CONFIG,
-)
-# [END how_to_cloud_dataproc_create_cluster_generate_cluster_config]
-
 
 TIMEOUT = {"seconds": 1 * 24 * 60 * 60}
 
 # Jobs definitions
 
-PYSPARK_URI="gs://bucket-356805/moviereviews_sparkapp.py"
 # [START how_to_cloud_dataproc_pyspark_config]
 PYSPARK_JOB = {
     "reference": {"project_id": PROJECT_ID},
@@ -127,6 +90,12 @@ with models.DAG(
     )
     # [END how_to_cloud_dataproc_create_cluster_operator]
 
+    gcs_delete_temp = GoogleCloudStorageDeleteOperator(
+        task_id="gcs_delete_temp",
+        bucket_name=GS_BUCKET,
+        prefix= GS_OUTPUT_FILE 
+    )
+
 
     # [START how_to_cloud_dataproc_submit_job_to_cluster_operator]
     pyspark_task = DataprocSubmitJobOperator(
@@ -141,5 +110,5 @@ with models.DAG(
     )
     # [END how_to_cloud_dataproc_delete_cluster_operator]
 
-    create_cluster >> pyspark_task >> delete_cluster
+    create_cluster >> gcs_delete_temp >> pyspark_task >> delete_cluster
 
