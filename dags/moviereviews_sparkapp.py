@@ -26,21 +26,36 @@ from pyspark.sql.types import IntegerType
 # local constants
 INPUT_FILE_NAME = "/data/var/incoming/capstone/movie_review.csv"
 
+from pyspark.sql import SparkSession
 
-def go_spark():
+
+if __name__ == "__main__":
+    #if len(sys.argv) != 2:
+    #    print("Usage: wordcount <file>", file=sys.stderr)
+    #    sys.exit(-1)
+
+    spark = SparkSession\
+        .builder\
+        .appName("MovieReview")\
+        .getOrCreate()
+    go_spark(spark)
+    spark.stop()
+
+
+def go_spark(hc):
     # Build a spark context
-    hc = (SparkSession.builder
-                  .appName('Toxic Comment Classification')
-                  .enableHiveSupport()
-                  .config("spark.executor.memory", "4G")
-                  .config("spark.driver.memory","18G")
-                  .config("spark.executor.cores","7")
-                  .config("spark.python.worker.memory","4G")
-                  .config("spark.driver.maxResultSize","0")
-                  .config("spark.sql.crossJoin.enabled", "true")
-                  .config("spark.serializer","org.apache.spark.serializer.KryoSerializer")
-                  .config("spark.default.parallelism","2")
-                  .getOrCreate())
+    #hc = (SparkSession.builder
+    #              .appName('Toxic Comment Classification')
+    #              .enableHiveSupport()
+    #              .config("spark.executor.memory", "4G")
+    #              .config("spark.driver.memory","18G")
+    #              .config("spark.executor.cores","7")
+    #              .config("spark.python.worker.memory","4G")
+    #              .config("spark.driver.maxResultSize","0")
+    #              .config("spark.sql.crossJoin.enabled", "true")
+    #              .config("spark.serializer","org.apache.spark.serializer.KryoSerializer")
+    #              .config("spark.default.parallelism","2")
+    #               .getOrCreate())
 
     df=to_spark_df(hc, INPUT_FILE_NAME)
     tokenizer = Tokenizer(inputCol="review_str", outputCol="review_token")
@@ -80,4 +95,3 @@ def to_spark_df(hc, fin):
     df.fillna("", inplace=True)
     df = hc.createDataFrame(df)
     return(df)
-go_spark()
