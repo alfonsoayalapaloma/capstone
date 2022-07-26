@@ -169,6 +169,7 @@ with models.DAG(
     GCS_BUCKET_STAGE_NAME="bucket-stage-356805"	   
     GCS_STAGE_PURCHASE="user_purchase_pro.csv"
     GCS_STAGE_REVIEW="moviereview/part*"
+    GCS_STAGE_LOGS="logreview/part*"
 	   
     def copy_to_gcs(copy_sql, file_name, bucket_name):
         gcs_hook = GoogleCloudStorageHook(GCP_CONN_ID)
@@ -229,7 +230,25 @@ with models.DAG(
             {"name": "review_id", "type": "INTEGER", "mode": "NULLABLE"},
         ],
     )
+    create_bq_logs = BigQueryCreateExternalTableOperator(
+        dag=dag,
+        task_id="create_bq_logs",
+        destination_project_dataset_table=f"{DATASET_NAME}.review_logs",
+        bucket=GCS_BUCKET_STAGE_NAME,
+        source_objects=[GCS_STAGE_LOGS],
+        quote_character="^",
+        field_delimiter=",",
+        schema_fields=[
+            {"name": "log_id", "type": "INTEGER", "mode": "NULLABLE"},
+            {"name": "log_date", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "device", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "os", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "location", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "browser", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "ip", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "phone_number", "type": "STRING", "mode": "NULLABLE"},
+        ],
+    )
 	   
-    create_cluster >> [pyspark_task_reviews , pyspark_task_logs] >> delete_cluster >> export_pg_table >> [create_bq_reviews, create_bq_purchase]
-    #gcs_delete_temp >> pyspark_task >> delete_cluster
+    create_cluster >> [pyspark_task_reviews , pyspark_task_logs] >> delete_cluster >> export_pg_table >> [create_bq_reviews, create_bq_purchase, create_bq_logs]
 
