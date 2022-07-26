@@ -240,7 +240,7 @@ with models.DAG(
         field_delimiter=",",
         schema_fields=[
             {"name": "log_id", "type": "INTEGER", "mode": "NULLABLE"},
-            {"name": "log_date", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "log_date", "type": "DATE", "mode": "NULLABLE"},
             {"name": "device", "type": "STRING", "mode": "NULLABLE"},
             {"name": "os", "type": "STRING", "mode": "NULLABLE"},
             {"name": "location", "type": "STRING", "mode": "NULLABLE"},
