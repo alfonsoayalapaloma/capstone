@@ -219,8 +219,8 @@ group by log_date
 """
 
 SQL_CREATE_FACT="""
-drop table IF EXISTS tmp_customer_agg;
-create table tmp_customer_agg as 
+drop table IF EXISTS movieds.tmp_customer_agg;
+create table movieds.tmp_customer_agg as 
 SELECT p.customer_id, 
 SUM(p.quantity * p.unit_price) as amount_spent,
 SUM(r.is_positive) as review_score,
