@@ -46,6 +46,7 @@ from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryUpdateTableSchemaOperator,
     BigQueryUpsertTableOperator,
     BigQueryCreateExternalTableOperator,
+    BigQueryExecuteQueryOperator,
 )
 from airflow.providers.google.cloud.operators.gcs import GCSCreateBucketOperator, GCSDeleteBucketOperator
 from airflow.providers.google.cloud.transfers.local_to_gcs import LocalFilesystemToGCSOperator
@@ -124,15 +125,21 @@ PYSPARK_JOB_LOGS = {
 # [END how_to_cloud_dataproc_pyspark_config]
 
 SQL_CREATE_DIMS="""
--------------
-CREATE TABLE movieds.dim_os (
-	   id_dim_os INTEGER,
-	   os STRING
-);
-
-
+drop view IF EXISTS movieds.review_logs;
+create view movieds.review_logs as 
+SELECT log_id, PARSE_DATE('%m-%d-%Y',  log_date_str) as log_date, device, os, 
+location,
+CASE WHEN os ="Microsoft Windows"  THEN 'Microsoft Edge'
+WHEN os="Linux" THEN 'Firefox'
+WHEN os="Apple MacOS" then 'Safari'
+WHEN os="Google Android" then 'Chrome'
+WHEN os="Apple iOS" then 'Safari'
+ELSE ''
+END AS browser,
+ ip, phone_number 
+FROM `capstone-356805.movieds.stage_review_logs`;
 --------------------------------------
-drop table movieds.dim_devices;
+drop table IF EXISTS movieds.dim_devices;
 CREATE TABLE movieds.dim_devices (
 	   id_dim_devices INTEGER,
 	   device STRING
@@ -145,10 +152,8 @@ select  device , count(*) as qty
 from movieds.review_logs 
 group by device
  )a;
-
 --------------------------------------
-
-drop table movieds.dim_os;
+drop table IF EXISTS movieds.dim_os;
 CREATE TABLE movieds.dim_os (
 	   id_dim_os INTEGER,
 	   os STRING
@@ -161,9 +166,8 @@ select   os,  count(*) as qty
 from movieds.review_logs 
 group by os
  )a;
- 
 --------------------------------------
-drop table movieds.dim_location;
+drop table IF EXISTS movieds.dim_location;
 CREATE TABLE movieds.dim_location (
 	   id_dim_location INTEGER,
 	   location STRING
@@ -177,8 +181,7 @@ from movieds.review_logs
 group by location
  )a;
 ----------------------------------------
-
-drop table movieds.dim_browser;
+drop table IF EXISTS movieds.dim_browser;
 CREATE TABLE movieds.dim_browser (
 	   id_dim_browser INTEGER,
 	   browser STRING
@@ -191,20 +194,6 @@ select   browser,  count(*) as qty
 from movieds.review_logs 
 group by browser
  )a;
-
-drop view movieds.review_logs;
-create view movieds.review_logs as 
-SELECT log_id, PARSE_DATE('%m-%d-%Y',  log_date_str) as log_date, device, os, 
-location,
-CASE WHEN os ="Microsoft Windows"  THEN 'Microsoft Edge'
-WHEN os="Linux" THEN 'Firefox'
-WHEN os="Apple MacOS" then 'Safari'
-WHEN os="Google Android" then 'Chrome'
-WHEN os="Apple iOS" then 'Safari'
-ELSE ''
-END AS browser,
- ip, phone_number 
-FROM `capstone-356805.movieds.stage_review_logs`;
 
 truncate table movieds.dim_date;
 insert into movieds.dim_date(log_date,day,month,year,season, id_dim_date)
@@ -230,7 +219,7 @@ group by log_date
 """
 
 SQL_CREATE_FACT="""
-drop table tmp_customer_agg;
+drop table IF EXISTS tmp_customer_agg;
 create table tmp_customer_agg as 
 SELECT p.customer_id, 
 SUM(p.quantity * p.unit_price) as amount_spent,
@@ -242,7 +231,7 @@ join  movieds.user_purchase p on (p.customer_id=r.customer_id)
 group by p.customer_id
 order by p.customer_id;
 ---------------------
-drop table movieds.tmp_logs_per_customer;
+drop table IF EXISTS movieds.tmp_logs_per_customer;
 create table movieds.tmp_logs_per_customer as 
 select r.customer_id, r.review_id, d.id_dim_devices, c.id_dim_location ,o.id_dim_os, b.id_dim_browser, 
  l.device, l.location, l.os, l.browser ,l.log_date, t.id_dim_date   
@@ -254,7 +243,7 @@ left join movieds.dim_os o on (o.os=l.os)
 left join movieds.dim_browser b on (b.browser=l.browser)
 left join movieds.dim_date t on (t.log_date=l.log_date) ;
 ---------------------
-drop table movieds.fact_movie_analytics ;
+drop table IF EXISTS movieds.fact_movie_analytics ;
 create table movieds.fact_movie_analytics  as 
 select l.customer_id, l.id_dim_devices, l.id_dim_location, l.id_dim_os, l.id_dim_browser,
 c.amount_spent, c.review_score, c.review_count ,CURRENT_TIMESTAMP() as insert_date, l.id_dim_date, l.log_date as review_date 
