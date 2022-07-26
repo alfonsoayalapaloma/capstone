@@ -110,7 +110,7 @@ with models.DAG(
          #hook = GCSHook( google_cloud_storage_conn_id=GCP_CONN_ID )
          #hook.delete(bucket_name=GS_BUCKET, object_name=GS_OUTPUT_FILE)
 
-         gcs_hook = GCSHook(gcp_conn_id=gcp_conn_id)
+         gcs_hook = GCSHook(gcp_conn_id=GCP_CONN_ID)
          gcs_hook.delete(bucket_name=GS_BUCKET, object_name=GS_OUTPUT_FILE)
 
     gcs_delete_temp = python.PythonOperator(
