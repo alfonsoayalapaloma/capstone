@@ -53,7 +53,7 @@ def go_spark(hc):
     from pyspark.sql.functions import lit
     df8=df7.withColumn("browser",lit(""))
     df9=df8.selectExpr('id_review','log_date','device','os','location','browser','ip','phone_number')
-    df9.coalesce(1).select('id_review','log_date','device','os','location','browser','ip','phone_number').write.csv( GS_OUTPUT_FILE )
+    df9.coalesce(1).select('id_review','log_date','device','os','location','browser','ip','phone_number').write.mode('overwrite').csv( GS_OUTPUT_FILE )
 
 if __name__ == "__main__":
     #if len(sys.argv) != 2:

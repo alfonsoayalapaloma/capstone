@@ -34,6 +34,35 @@ from airflow.providers.google.cloud.hooks.gcs import GCSHook
 from airflow.operators import python
 
 from airflow.providers.google.cloud.sensors.dataproc import DataprocJobSensor
+from contextlib import closing
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryCreateEmptyDatasetOperator,
+    BigQueryCreateEmptyTableOperator,
+    BigQueryDeleteDatasetOperator,
+    BigQueryDeleteTableOperator,
+    BigQueryGetDatasetTablesOperator,
+    BigQueryUpdateDatasetOperator,
+    BigQueryUpdateTableOperator,
+    BigQueryUpdateTableSchemaOperator,
+    BigQueryUpsertTableOperator,
+    BigQueryCreateExternalTableOperator,
+)
+from airflow.providers.google.cloud.operators.gcs import GCSCreateBucketOperator, GCSDeleteBucketOperator
+from airflow.providers.google.cloud.transfers.local_to_gcs import LocalFilesystemToGCSOperator
+
+from airflow.operators.dummy import DummyOperator
+from airflow.operators.python import PythonOperator
+from airflow.operators.sql import BranchSQLOperator
+import logging
+from tempfile import NamedTemporaryFile
+
+from airflow.contrib.hooks.gcs_hook import GoogleCloudStorageHook
+from airflow.providers.google.cloud.hooks.gcs import GCSHook
+from airflow.providers.google.cloud.sensors.gcs import GCSObjectExistenceSensor
+from airflow.providers.postgres.hooks.postgres import PostgresHook
+from airflow.providers.postgres.operators.postgres import PostgresOperator
+from airflow.utils.trigger_rule import TriggerRule
+
 
 
 PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "capstone-356805")
@@ -128,6 +157,49 @@ with models.DAG(
     )
     # [END how_to_cloud_dataproc_delete_cluster_operator]
 
-    create_cluster >> [pyspark_task_reviews , pyspark_task_logs] >> delete_cluster
+    # Postgres constants
+    POSTGRES_CONN_ID = "postgres_local"
+    POSTGRES_TABLE_NAME = "user_purchase"
+
+    # Bigquery
+    DATASET_NAME="movieds"
+	   
+    # Stage file 
+    GCS_PURCHASE_STAGE_FILE="user_purchase_pro.csv"
+    GCS_BUCKET_STAGE_NAME="bucket-stage-356805"	   
+	   
+    def copy_to_gcs(copy_sql, file_name, bucket_name):
+        gcs_hook = GoogleCloudStorageHook(GCP_CONN_ID)
+        pg_hook = PostgresHook.get_hook(POSTGRES_CONN_ID)
+
+        with NamedTemporaryFile(suffix=".csv") as temp_file:
+            temp_name = temp_file.name
+
+            logging.info("Exporting query to file '%s'", temp_name)
+            pg_hook.copy_expert(copy_sql, filename=temp_name)
+
+            logging.info("Uploading to %s/%s", bucket_name, file_name)
+            gcs_hook.upload(bucket_name, file_name, temp_name)
+
+
+    export_pg_table = PythonOperator(
+        dag=dag,
+        task_id="copy_to_gcs",
+        python_callable=copy_to_gcs,
+        op_kwargs={
+            "copy_sql": "COPY (SELECT * FROM dbschema.user_purchase) TO STDOUT WITH (FORMAT csv, DELIMITER ',', QUOTE '^', HEADER FALSE)",
+            "file_name": GCS_PURCHASE_STAGE_FILE,
+            "bucket_name": GCS_BUCKET_STAGE_NAME
+            }
+        )
+	   
+
+
+
+
+
+
+
+    create_cluster >> [pyspark_task_reviews , pyspark_task_logs] >> delete_cluster >> export_pg_table
     #gcs_delete_temp >> pyspark_task >> delete_cluster
 
