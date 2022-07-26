@@ -167,6 +167,8 @@ with models.DAG(
     # Stage file 
     GCS_PURCHASE_STAGE_FILE="user_purchase_pro.csv"
     GCS_BUCKET_STAGE_NAME="bucket-stage-356805"	   
+    GCS_STAGE_PURCHASE="user_purchase_pro.csv"
+    GCS_STAGE_REVIEW="moviereview/part*"
 	   
     def copy_to_gcs(copy_sql, file_name, bucket_name):
         gcs_hook = GoogleCloudStorageHook(GCP_CONN_ID)
@@ -184,7 +186,7 @@ with models.DAG(
 
     export_pg_table = PythonOperator(
         dag=dag,
-        task_id="copy_to_gcs",
+        task_id="copy_user_purchase_to_gcs",
         python_callable=copy_to_gcs,
         op_kwargs={
             "copy_sql": "COPY (SELECT * FROM dbschema.user_purchase) TO STDOUT WITH (FORMAT csv, DELIMITER ',', QUOTE '^', HEADER FALSE)",
@@ -192,14 +194,42 @@ with models.DAG(
             "bucket_name": GCS_BUCKET_STAGE_NAME
             }
         )
+
+    create_bq_purchase = BigQueryCreateExternalTableOperator(
+        dag=dag,
+        task_id="create_bq_purchase",
+        destination_project_dataset_table=f"{DATASET_NAME}.user_purchase",
+        bucket=GCS_BUCKET_STAGE_NAME,
+        source_objects=[GCS_STAGE_PURCHASE],
+        quote_character="^",
+        field_delimiter=",",
+        schema_fields=[
+            {"name": "invoice_number", "type": "STRING", "mode": "REQUIRED"},
+            {"name": "stock_code", "type": "STRING", "mode": "REQUIRED"},
+            {"name": "detail", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "quantity", "type": "INTEGER", "mode": "REQUIRED"},
+            {"name": "invoice_date", "type": "DATETIME", "mode": "REQUIRED"},
+            {"name": "unit_price", "type": "NUMERIC", "mode": "REQUIRED"},
+            {"name": "customer_id", "type": "INTEGER", "mode": "NULLABLE"},
+            {"name": "country", "type": "STRING", "mode": "NULLABLE"},
+        ],
+    )
+
+    create_bq_reviews = BigQueryCreateExternalTableOperator(
+        dag=dag,
+        task_id="create_bq_reviews",
+        destination_project_dataset_table=f"{DATASET_NAME}.classified_movie_review",
+        bucket=GCS_BUCKET_STAGE_NAME,
+        source_objects=[GCS_STAGE_REVIEW],
+        quote_character="^",
+        field_delimiter=",",
+        schema_fields=[
+            {"name": "customer_id", "type": "INTEGER", "mode": "NULLABLE"},
+            {"name": "is_positive", "type": "INTEGER", "mode": "NULLABLE"},
+            {"name": "review_id", "type": "INTEGER", "mode": "NULLABLE"},
+        ],
+    )
 	   
-
-
-
-
-
-
-
-    create_cluster >> [pyspark_task_reviews , pyspark_task_logs] >> delete_cluster >> export_pg_table
+    create_cluster >> [pyspark_task_reviews , pyspark_task_logs] >> delete_cluster >> export_pg_table >> [create_bq_reviews, create_bq_purchase]
     #gcs_delete_temp >> pyspark_task >> delete_cluster
 
