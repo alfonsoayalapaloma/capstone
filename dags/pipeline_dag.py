@@ -233,14 +233,14 @@ with models.DAG(
     create_bq_logs = BigQueryCreateExternalTableOperator(
         dag=dag,
         task_id="create_bq_logs",
-        destination_project_dataset_table=f"{DATASET_NAME}.review_logs",
+        destination_project_dataset_table=f"{DATASET_NAME}.stage_review_logs",
         bucket=GCS_BUCKET_STAGE_NAME,
         source_objects=[GCS_STAGE_LOGS],
         quote_character="^",
         field_delimiter=",",
         schema_fields=[
             {"name": "log_id", "type": "INTEGER", "mode": "NULLABLE"},
-            {"name": "log_date", "type": "DATE", "mode": "NULLABLE"},
+            {"name": "log_date_str", "type": "STRING", "mode": "NULLABLE"},
             {"name": "device", "type": "STRING", "mode": "NULLABLE"},
             {"name": "os", "type": "STRING", "mode": "NULLABLE"},
             {"name": "location", "type": "STRING", "mode": "NULLABLE"},
