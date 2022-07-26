@@ -111,13 +111,13 @@ with models.DAG(
     # [END how_to_cloud_dataproc_create_cluster_operator]
 
     # [START how_to_cloud_dataproc_submit_job_to_cluster_operator]
-    pyspark_task_movies = DataprocSubmitJobOperator(
-        task_id="pyspark_task", job=PYSPARK_JOB, region=REGION, project_id=PROJECT_ID
+    pyspark_task_reviews = DataprocSubmitJobOperator(
+        task_id="pyspark_task_reviews", job=PYSPARK_JOB, region=REGION, project_id=PROJECT_ID
     )
     # [END how_to_cloud_dataproc_submit_job_to_cluster_operator]
     # [START how_to_cloud_dataproc_submit_job_to_cluster_operator]
     pyspark_task_logs = DataprocSubmitJobOperator(
-        task_id="pyspark_task", job=PYSPARK_JOB_LOGS, region=REGION, project_id=PROJECT_ID
+        task_id="pyspark_task_logs", job=PYSPARK_JOB_LOGS, region=REGION, project_id=PROJECT_ID
     )
     # [END how_to_cloud_dataproc_submit_job_to_cluster_operator]
 
@@ -128,6 +128,6 @@ with models.DAG(
     )
     # [END how_to_cloud_dataproc_delete_cluster_operator]
 
-    create_cluster >> [pyspark_task_movies , pyspark_task_logs] >> delete_cluster
+    create_cluster >> [pyspark_task_reviews , pyspark_task_logs] >> delete_cluster
     #gcs_delete_temp >> pyspark_task >> delete_cluster
 
