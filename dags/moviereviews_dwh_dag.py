@@ -64,7 +64,8 @@ GCS_KEY_NAME = "user_purchase.csv"
 
 
 GCS_BUCKET_STAGE_NAME = "bucket-stage-356805"
-GCS_KEY_STAGE_NAME = "movie_review_pro.csv"
+#GCS_KEY_STAGE_NAME = "movie_review_pro.csv"
+GCS_KEY_STAGE_NAME = "moviereview"
 
 # Postgres constants
 POSTGRES_CONN_ID = "postgres_local"
@@ -75,7 +76,7 @@ DATASET_NAME="movieds"
 
 
 dag = DAG(
-    dag_id = "classified_movie_review_dag",
+    dag_id = "moviereviews_dwh_dag",
     default_args=args,
     # schedule_interval='0 0 * * *',
     schedule_interval='@once',	
