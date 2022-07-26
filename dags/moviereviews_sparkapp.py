@@ -47,7 +47,7 @@ def go_spark(hc):
         ).otherwise( 0 ) )
 
     df3=df2.withColumn("insert_date", F.current_timestamp() )
-    df3.coalesce(1).select("cid",  "positive_review","id_review").write.csv( GS_OUTPUT_FILE )
+    df3.coalesce(1).select("cid",  "positive_review","id_review").write.mode('overwrite').csv( GS_OUTPUT_FILE )
 
 if __name__ == "__main__":
     #if len(sys.argv) != 2:

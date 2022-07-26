@@ -93,13 +93,13 @@ with models.DAG(
     catchup=False,
 ) as dag:
     # [START how_to_cloud_dataproc_create_cluster_operator]
-    #create_cluster = DataprocCreateClusterOperator(
-    #    task_id="create_cluster",
-    #    project_id=PROJECT_ID,
-    #    cluster_config=CLUSTER_CONFIG,
-    #    region=REGION,
-    #    cluster_name=CLUSTER_NAME,
-    #)
+    create_cluster = DataprocCreateClusterOperator(
+        task_id="create_cluster",
+        project_id=PROJECT_ID,
+        cluster_config=CLUSTER_CONFIG,
+        region=REGION,
+        cluster_name=CLUSTER_NAME,
+    )
     # [END how_to_cloud_dataproc_create_cluster_operator]
 
     #gcs_delete_temp = GCSDeleteObjectsOperator(
@@ -113,11 +113,11 @@ with models.DAG(
          gcs_hook = GCSHook(gcp_conn_id=GCP_CONN_ID)
          gcs_hook.delete(bucket_name=GS_BUCKET, object_name=GS_OUTPUT_FILE)
 
-    gcs_delete_temp = python.PythonOperator(
-            task_id='delete_gcs_obj',
-            provide_context=True,
-            python_callable=delete_obj,
-            )
+    #gcs_delete_temp = python.PythonOperator(
+    #        task_id='delete_gcs_obj',
+    #        provide_context=True,
+    #        python_callable=delete_obj,
+    #        )
 
 
     # [START how_to_cloud_dataproc_submit_job_to_cluster_operator]
@@ -133,6 +133,6 @@ with models.DAG(
     )
     # [END how_to_cloud_dataproc_delete_cluster_operator]
 
-    #create_cluster >> gcs_delete_temp >> pyspark_task >> delete_cluster
-    gcs_delete_temp >> pyspark_task >> delete_cluster
+    create_cluster >> pyspark_task >> delete_cluster
+    #gcs_delete_temp >> pyspark_task >> delete_cluster
 
