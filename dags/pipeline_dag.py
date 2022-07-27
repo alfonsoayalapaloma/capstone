@@ -402,5 +402,5 @@ with models.DAG(
         task_id="create_fact", sql=SQL_CREATE_FACT, use_legacy_sql=False
     )
 	   
-    create_cluster >> [pyspark_task_reviews , pyspark_task_logs] >> delete_cluster >> export_pg_table >> [create_bq_reviews, create_bq_purchase, create_bq_logs] >> create_dims >> create_fact
+    create_cluster >> [pyspark_task_reviews , pyspark_task_logs] >> delete_cluster >> export_pg_table >> [create_bq_reviews, create_bq_purchase, create_bq_logs, create_bq_states] >> create_dims >> create_fact
 
