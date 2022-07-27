@@ -257,7 +257,7 @@ order by 1;
 SQL_CLEANUP ="""
 --clean up 
 drop table if exists tmp_customer_agg;
-drop table if existe tmp_logs_per_customer;
+drop table if exists tmp_logs_per_customer;
 drop table if exists tmp_logs_per_user; 
 drop table if exists stage_review_logs;
 """
@@ -268,7 +268,6 @@ with models.DAG(
     start_date=datetime(2021, 1, 1),
     catchup=False,
 ) as dag:
-    # [START how_to_cloud_dataproc_create_cluster_operator]
     create_cluster = DataprocCreateClusterOperator(
         task_id="create_cluster",
         project_id=PROJECT_ID,
@@ -276,25 +275,16 @@ with models.DAG(
         region=REGION,
         cluster_name=CLUSTER_NAME,
     )
-    # [END how_to_cloud_dataproc_create_cluster_operator]
 
-    # [START how_to_cloud_dataproc_submit_job_to_cluster_operator]
     pyspark_task_reviews = DataprocSubmitJobOperator(
         task_id="pyspark_task_reviews", job=PYSPARK_JOB, region=REGION, project_id=PROJECT_ID
     )
-    # [END how_to_cloud_dataproc_submit_job_to_cluster_operator]
-    # [START how_to_cloud_dataproc_submit_job_to_cluster_operator]
     pyspark_task_logs = DataprocSubmitJobOperator(
         task_id="pyspark_task_logs", job=PYSPARK_JOB_LOGS, region=REGION, project_id=PROJECT_ID
     )
-    # [END how_to_cloud_dataproc_submit_job_to_cluster_operator]
-
-
-    # [START how_to_cloud_dataproc_delete_cluster_operator]
     delete_cluster = DataprocDeleteClusterOperator(
         task_id="delete_cluster", project_id=PROJECT_ID, cluster_name=CLUSTER_NAME, region=REGION
     )
-    # [END how_to_cloud_dataproc_delete_cluster_operator]
 
     # Postgres constants
     POSTGRES_CONN_ID = "postgres_local"
@@ -335,6 +325,7 @@ with models.DAG(
             "bucket_name": GCS_BUCKET_STAGE_NAME
             }
         )
+
     create_bq_states = BigQueryCreateExternalTableOperator(
         dag=dag,
         task_id="create_bq_state",
@@ -342,7 +333,7 @@ with models.DAG(
         bucket=GCS_BUCKET_STAGE_NAME,
         source_objects=[GCS_STAGE_STATES],
         quote_character="^",
-        field_delimiter="\t",
+        field_delimiter=",",
         schema_fields=[
             {"name": "state", "type": "STRING", "mode": "NULLABLE"},
             {"name": "latitude", "type": "NUMERIC", "mode": "NULLABLE"},
