@@ -246,7 +246,7 @@ left join movieds.dim_date t on (t.log_date=l.log_date) ;
 drop table IF EXISTS movieds.fact_movie_analytics ;
 create table movieds.fact_movie_analytics  as 
 select l.customer_id, l.id_dim_devices, l.id_dim_location, l.id_dim_os, l.id_dim_browser,
-c.amount_spent, c.review_score, c.review_count ,CURRENT_TIMESTAMP() as insert_date, l.id_dim_date, l.log_date as review_date 
+c.amount_spent, c.review_score, c.review_count ,CURRENT_TIMESTAMP() as insert_date, l.id_dim_date, l.log_date as review_date, l.review_id  
 from movieds.tmp_logs_per_customer  l 
 left join movieds.tmp_customer_agg c on (c.customer_id = l.customer_id )
 order by 1;
@@ -300,6 +300,7 @@ with models.DAG(
     GCS_STAGE_PURCHASE="user_purchase_pro.csv"
     GCS_STAGE_REVIEW="moviereview/part*"
     GCS_STAGE_LOGS="logreview/part*"
+    GCS_STAGE_STATES="states.csv"
 	   
     def copy_to_gcs(copy_sql, file_name, bucket_name):
         gcs_hook = GoogleCloudStorageHook(GCP_CONN_ID)
@@ -325,6 +326,21 @@ with models.DAG(
             "bucket_name": GCS_BUCKET_STAGE_NAME
             }
         )
+    create_bq_states = BigQueryCreateExternalTableOperator(
+        dag=dag,
+        task_id="create_bq_state",
+        destination_project_dataset_table=f"{DATASET_NAME}.state",
+        bucket=GCS_BUCKET_STAGE_NAME,
+        source_objects=[GCS_STAGE_STATES],
+        quote_character="^",
+        #field_delimiter=",",
+        schema_fields=[
+            {"name": "state", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "latitude", "type": "NUMERIC", "mode": "NULLABLE"},
+            {"name": "longitude", "type": "NUMERIC", "mode": "NULLABLE"},
+            {"name": "name", "type": "STRING", "mode": "NULLABLE"},
+        ],
+    )
 
     create_bq_purchase = BigQueryCreateExternalTableOperator(
         dag=dag,
