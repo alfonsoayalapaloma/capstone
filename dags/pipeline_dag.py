@@ -125,8 +125,8 @@ PYSPARK_JOB_LOGS = {
 # [END how_to_cloud_dataproc_pyspark_config]
 
 SQL_CREATE_DIMS="""
-drop view IF EXISTS movieds.review_logs;
-create view movieds.review_logs as 
+drop table IF EXISTS movieds.review_logs;
+create table movieds.review_logs as 
 SELECT log_id, PARSE_DATE('%m-%d-%Y',  log_date_str) as log_date, device, os, 
 location,
 CASE WHEN os ="Microsoft Windows"  THEN 'Microsoft Edge'
@@ -253,6 +253,15 @@ order by 1;
 
 """
 
+
+SQL_CLEANUP ="""
+--clean up 
+drop table if exists tmp_customer_agg;
+drop table if existe tmp_logs_per_customer;
+drop table if exists tmp_logs_per_user; 
+drop table if exists stage_review_logs;
+"""
+
 with models.DAG(
         "pipeline_dag",
     schedule_interval='@once',
@@ -333,7 +342,7 @@ with models.DAG(
         bucket=GCS_BUCKET_STAGE_NAME,
         source_objects=[GCS_STAGE_STATES],
         quote_character="^",
-        #field_delimiter=",",
+        field_delimiter="\t",
         schema_fields=[
             {"name": "state", "type": "STRING", "mode": "NULLABLE"},
             {"name": "latitude", "type": "NUMERIC", "mode": "NULLABLE"},
@@ -401,6 +410,9 @@ with models.DAG(
     create_fact = BigQueryExecuteQueryOperator(
         task_id="create_fact", sql=SQL_CREATE_FACT, use_legacy_sql=False
     )
+    cleanup = BigQueryExecuteQueryOperator(
+        task_id="cleanup", sql=SQL_CLEANUP, use_legacy_sql=False
+    )
 	   
-    create_cluster >> [pyspark_task_reviews , pyspark_task_logs] >> delete_cluster >> export_pg_table >> [create_bq_reviews, create_bq_purchase, create_bq_logs, create_bq_states] >> create_dims >> create_fact
+    create_cluster >> [pyspark_task_reviews , pyspark_task_logs] >> delete_cluster >> export_pg_table >> [create_bq_reviews, create_bq_purchase, create_bq_logs, create_bq_states] >> create_dims >> create_fact >> cleanup
 
