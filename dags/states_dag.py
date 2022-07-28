@@ -307,7 +307,7 @@ with models.DAG(
         bucket=GCS_BUCKET_STAGE_NAME,
         source_objects=[GCS_STAGE_STATES],
         skip_leading_rows=1,
-        bigquery_conn_id=GCS_CONN_ID,
+        bigquery_conn_id=GCP_CONN_ID,
         destination_project_dataset_table='{}.{}.{}'.format(PROJECT_ID, SCHEMA_ID, TABLE_ID),
         source_format='CSV',
         create_disposition='CREATE_IF_NEEDED',
