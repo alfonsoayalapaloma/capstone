@@ -67,6 +67,8 @@ from airflow.contrib.operators.gcs_to_bq import  GoogleCloudStorageToBigQueryOpe
 
 
 PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "capstone-356805")
+SCHEMA_ID="movieds"
+TABLE_ID="state"
 CLUSTER_NAME = os.environ.get("GCP_DATAPROC_CLUSTER_NAME", "capstone-356805-cluster")
 REGION = os.environ.get("GCP_LOCATION", "europe-west1")
 ZONE = os.environ.get("GCP_REGION", "europe-west1-b")
@@ -306,7 +308,7 @@ with models.DAG(
         source_objects=[GCS_STAGE_STATES],
         skip_leading_rows=1,
         bigquery_conn_id=GCS_CONN_ID,
-        destination_project_dataset_table='{}.{}.{}'.format(project, schema, table),
+        destination_project_dataset_table='{}.{}.{}'.format(PROJECT_ID, SCHEMA_ID, TABLE_ID),
         source_format='CSV',
         create_disposition='CREATE_IF_NEEDED',
         write_disposition='WRITE_APPEND',
@@ -315,5 +317,5 @@ with models.DAG(
         dag=dag
     )
 
-    create_bq_states
+    csv_to_bigquery
 
