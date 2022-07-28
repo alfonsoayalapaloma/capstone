@@ -201,7 +201,7 @@ from movieds.review_logs
 group by browser
  )a;
 
-truncate table movieds.dim_date;
+drop table movieds.dim_date;
 insert into movieds.dim_date(log_date,day,month,year,season, id_dim_date)
 select log_date, cast(day as STRING), cast(month as STRING) ,cast(year as STRING) , 
 CASE WHEN month between 1  and 2 THEN 'winter'
