@@ -268,6 +268,23 @@ drop table if exists movieds.tmp_logs_per_user;
 drop table if exists movieds.stage_review_logs;
 """
 
+SQL_CLEAN_FIRST="""
+drop table if exists movieds.dim_browser;
+drop table if exists movieds.dim_date;
+drop table if exists movieds.dim_devices;
+drop table if exists movieds.dim_location;
+drop table if exists movieds.dim_os;
+drop table if exists movieds.fact_movie_analytics;
+drop table if exists movieds.fact_denormalized;
+----
+drop table if exists movieds.review_logs;
+drop table if exists movieds.classified_movie_review;
+drop table if exists movieds.user_purchase;
+----
+drop table if exists movieds.state;
+
+"""
+
 with models.DAG(
         "pipeline_dag",
     schedule_interval='@once',
@@ -429,9 +446,13 @@ with models.DAG(
     create_fact = BigQueryExecuteQueryOperator(
         task_id="create_fact", sql=SQL_CREATE_FACT, use_legacy_sql=False
     )
-    cleanup = BigQueryExecuteQueryOperator(
-        task_id="cleanup", sql=SQL_CLEANUP, use_legacy_sql=False
+    #cleanup = BigQueryExecuteQueryOperator(
+    #    task_id="cleanup", sql=SQL_CLEANUP, use_legacy_sql=False
+    #)
+    clean_first = BigQueryExecuteQueryOperator(
+        task_id="clean_first", sql=SQL_CLEAN_FIRST, use_legacy_sql=False
     )
 	   
-    create_cluster >> [pyspark_task_reviews , pyspark_task_logs] >> delete_cluster >> export_pg_table >> [create_bq_reviews, create_bq_purchase, create_bq_logs, create_bq_states] >> create_dims >> create_fact >> cleanup
+	   
+    create_cluster >> [pyspark_task_reviews , pyspark_task_logs] >> delete_cluster >> export_pg_table >> clean_first >> [create_bq_reviews, create_bq_purchase, create_bq_logs, create_bq_states] >> create_dims >> create_fact # >> cleanup
 
