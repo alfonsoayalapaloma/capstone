@@ -68,7 +68,7 @@ from airflow.contrib.operators.gcs_to_bq import  GoogleCloudStorageToBigQueryOpe
 
 PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "capstone-356805")
 SCHEMA_ID="movieds"
-TABLE_ID="state"
+TABLE_ID="states"
 CLUSTER_NAME = os.environ.get("GCP_DATAPROC_CLUSTER_NAME", "capstone-356805-cluster")
 REGION = os.environ.get("GCP_LOCATION", "europe-west1")
 ZONE = os.environ.get("GCP_REGION", "europe-west1-b")
