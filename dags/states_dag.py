@@ -294,8 +294,8 @@ with models.DAG(
         field_delimiter=",",
         schema_fields=[
             {"name": "state", "type": "STRING", "mode": "NULLABLE"},
-            {"name": "latitude", "type": "NUMERIC", "mode": "NULLABLE"},
-            {"name": "longitude", "type": "NUMERIC", "mode": "NULLABLE"},
+            {"name": "latitude",  "type": "DECIMAL", "mode": "NULLABLE"},
+            {"name": "longitude", "type": "DECIMAL", "mode": "NULLABLE"},
             {"name": "name", "type": "STRING", "mode": "NULLABLE"},
         ],
     )
