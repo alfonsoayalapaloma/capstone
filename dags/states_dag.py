@@ -263,7 +263,7 @@ drop table if exists movieds.stage_review_logs;
 """
 
 with models.DAG(
-        "pipeline_dag",
+        "states_dag",
     schedule_interval='@once',
     start_date=datetime(2021, 1, 1),
     catchup=False,
