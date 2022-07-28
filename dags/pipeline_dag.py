@@ -63,6 +63,7 @@ from airflow.providers.google.cloud.sensors.gcs import GCSObjectExistenceSensor
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 from airflow.utils.trigger_rule import TriggerRule
+from airflow.contrib.operators.gcs_to_bq import  GoogleCloudStorageToBigQueryOperator
 
 
 
