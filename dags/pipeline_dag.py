@@ -256,10 +256,10 @@ order by 1;
 
 SQL_CLEANUP ="""
 --clean up 
-drop table if exists tmp_customer_agg;
-drop table if exists tmp_logs_per_customer;
-drop table if exists tmp_logs_per_user; 
-drop table if exists stage_review_logs;
+drop table if exists movieds.tmp_customer_agg;
+drop table if exists movieds.tmp_logs_per_customer;
+drop table if exists movieds.tmp_logs_per_user; 
+drop table if exists movieds.stage_review_logs;
 """
 
 with models.DAG(
