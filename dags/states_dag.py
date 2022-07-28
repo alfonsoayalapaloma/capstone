@@ -304,7 +304,7 @@ with models.DAG(
     csv_to_bigquery = GoogleCloudStorageToBigQueryOperator(
         task_id='csv_to_bigquery',
         google_cloud_storage_conn_id=GCP_CONN_ID,
-        bucket=airflow_bucket,
+        bucket=GCS_BUCKET_STAGE_NAME,
         source_objects=[GCS_STAGE_STATES],
         skip_leading_rows=1,
         bigquery_conn_id=GCS_CONN_ID,
