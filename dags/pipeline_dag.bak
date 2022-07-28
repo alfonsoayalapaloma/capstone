@@ -330,21 +330,78 @@ with models.DAG(
             }
         )
 
-    create_bq_states = GoogleCloudStorageToBigQueryOperator(
-        task_id='create_bq_states',
-        google_cloud_storage_conn_id=GCP_CONN_ID,
+    create_bq_states = BigQueryCreateExternalTableOperator(
+        dag=dag,
+        task_id="create_bq_state",
+        destination_project_dataset_table=f"{DATASET_NAME}.state",
         bucket=GCS_BUCKET_STAGE_NAME,
         source_objects=[GCS_STAGE_STATES],
-        skip_leading_rows=1,
-        bigquery_conn_id=GCP_CONN_ID,
-        destination_project_dataset_table='{}.{}.{}'.format(PROJECT_ID, SCHEMA_ID, 'state'),
-        source_format='CSV',
-        create_disposition='CREATE_IF_NEEDED',
-        write_disposition='WRITE_APPEND',
-        schema_update_options=['ALLOW_FIELD_RELAXATION', 'ALLOW_FIELD_ADDITION'],
-        autodetect=True,
-        dag=dag
+        quote_character="^",
+        field_delimiter=",",
+        schema_fields=[
+            {"name": "state", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "latitude", "type": "NUMERIC", "mode": "NULLABLE"},
+            {"name": "longitude", "type": "NUMERIC", "mode": "NULLABLE"},
+            {"name": "name", "type": "STRING", "mode": "NULLABLE"},
+        ],
     )
+
+    create_bq_purchase = BigQueryCreateExternalTableOperator(
+        dag=dag,
+        task_id="create_bq_purchase",
+        destination_project_dataset_table=f"{DATASET_NAME}.user_purchase",
+        bucket=GCS_BUCKET_STAGE_NAME,
+        source_objects=[GCS_STAGE_PURCHASE],
+        quote_character="^",
+        field_delimiter=",",
+        schema_fields=[
+            {"name": "invoice_number", "type": "STRING", "mode": "REQUIRED"},
+            {"name": "stock_code", "type": "STRING", "mode": "REQUIRED"},
+            {"name": "detail", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "quantity", "type": "INTEGER", "mode": "REQUIRED"},
+            {"name": "invoice_date", "type": "DATETIME", "mode": "REQUIRED"},
+            {"name": "unit_price", "type": "NUMERIC", "mode": "REQUIRED"},
+            {"name": "customer_id", "type": "INTEGER", "mode": "NULLABLE"},
+            {"name": "country", "type": "STRING", "mode": "NULLABLE"},
+        ],
+    )
+
+    create_bq_reviews = BigQueryCreateExternalTableOperator(
+        dag=dag,
+        task_id="create_bq_reviews",
+        destination_project_dataset_table=f"{DATASET_NAME}.classified_movie_review",
+        bucket=GCS_BUCKET_STAGE_NAME,
+        source_objects=[GCS_STAGE_REVIEW],
+        quote_character="^",
+        field_delimiter=",",
+        schema_fields=[
+            {"name": "customer_id", "type": "INTEGER", "mode": "NULLABLE"},
+            {"name": "is_positive", "type": "INTEGER", "mode": "NULLABLE"},
+            {"name": "review_id", "type": "INTEGER", "mode": "NULLABLE"},
+        ],
+    )
+    create_bq_logs = BigQueryCreateExternalTableOperator(
+        dag=dag,
+        task_id="create_bq_logs",
+        destination_project_dataset_table=f"{DATASET_NAME}.stage_review_logs",
+        bucket=GCS_BUCKET_STAGE_NAME,
+        source_objects=[GCS_STAGE_LOGS],
+        quote_character="^",
+        field_delimiter=",",
+        schema_fields=[
+            {"name": "log_id", "type": "INTEGER", "mode": "NULLABLE"},
+            {"name": "log_date_str", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "device", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "os", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "location", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "browser", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "ip", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "phone_number", "type": "STRING", "mode": "NULLABLE"},
+        ],
+    )
+
+
+
 
     create_bq_purchase = GoogleCloudStorageToBigQueryOperator(
         task_id='create_bq_purchase',
