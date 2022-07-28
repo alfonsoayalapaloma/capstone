@@ -361,7 +361,17 @@ with models.DAG(
         write_disposition='WRITE_APPEND',
         schema_update_options=['ALLOW_FIELD_RELAXATION', 'ALLOW_FIELD_ADDITION'],
         autodetect=True,
-        dag=dag
+        schema_fields=[
+            {"name": "invoice_number", "type": "STRING", "mode": "REQUIRED"},
+            {"name": "stock_code", "type": "STRING", "mode": "REQUIRED"},
+            {"name": "detail", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "quantity", "type": "INTEGER", "mode": "REQUIRED"},
+            {"name": "invoice_date", "type": "DATETIME", "mode": "REQUIRED"},
+            {"name": "unit_price", "type": "NUMERIC", "mode": "REQUIRED"},
+            {"name": "customer_id", "type": "INTEGER", "mode": "NULLABLE"},
+            {"name": "country", "type": "STRING", "mode": "NULLABLE"},
+        ],
+	dag=dag
     )
 
     create_bq_reviews = GoogleCloudStorageToBigQueryOperator(
@@ -377,9 +387,14 @@ with models.DAG(
         write_disposition='WRITE_APPEND',
         schema_update_options=['ALLOW_FIELD_RELAXATION', 'ALLOW_FIELD_ADDITION'],
         autodetect=True,
+		schema_fields=[
+            {"name": "customer_id", "type": "INTEGER", "mode": "NULLABLE"},
+            {"name": "is_positive", "type": "INTEGER", "mode": "NULLABLE"},
+            {"name": "review_id", "type": "INTEGER", "mode": "NULLABLE"},
+        ],
         dag=dag
     )
-
+	
     create_bq_logs = GoogleCloudStorageToBigQueryOperator(
         task_id='create_bq_logs',
         google_cloud_storage_conn_id=GCP_CONN_ID,
@@ -393,6 +408,16 @@ with models.DAG(
         write_disposition='WRITE_APPEND',
         schema_update_options=['ALLOW_FIELD_RELAXATION', 'ALLOW_FIELD_ADDITION'],
         autodetect=True,
+		schema_fields=[
+            {"name": "log_id", "type": "INTEGER", "mode": "NULLABLE"},
+            {"name": "log_date_str", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "device", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "os", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "location", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "browser", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "ip", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "phone_number", "type": "STRING", "mode": "NULLABLE"},
+        ],
         dag=dag
     )
     create_dims = BigQueryExecuteQueryOperator(
