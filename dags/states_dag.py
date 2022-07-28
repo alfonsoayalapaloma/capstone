@@ -63,7 +63,7 @@ from airflow.providers.google.cloud.sensors.gcs import GCSObjectExistenceSensor
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 from airflow.utils.trigger_rule import TriggerRule
-
+from airflow.contrib.operators.gcs_to_bq import  GoogleCloudStorageToBigQueryOperator
 
 
 PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "capstone-356805")
@@ -298,6 +298,21 @@ with models.DAG(
             {"name": "longitude", "type": "DECIMAL", "mode": "NULLABLE"},
             {"name": "name", "type": "STRING", "mode": "NULLABLE"},
         ],
+    )
+    csv_to_bigquery = GoogleCloudStorageToBigQueryOperator(
+        task_id='csv_to_bigquery',
+        google_cloud_storage_conn_id=GCS_CONN_ID,
+        bucket=airflow_bucket,
+        source_objects=[GCS_STAGE_STATES],
+        skip_leading_rows=1,
+        bigquery_conn_id=GCS_CONN_ID,
+        destination_project_dataset_table='{}.{}.{}'.format(project, schema, table),
+        source_format='CSV',
+        create_disposition='CREATE_IF_NEEDED',
+        write_disposition='WRITE_APPEND',
+        schema_update_options=['ALLOW_FIELD_RELAXATION', 'ALLOW_FIELD_ADDITION'],
+        autodetect=True,
+        dag=dag
     )
 
     create_bq_states
