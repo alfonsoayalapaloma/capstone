@@ -265,6 +265,19 @@ from movieds.tmp_logs_per_customer  l
 left join movieds.tmp_customer_agg c on (c.customer_id = l.customer_id )
 order by 1;
 
+drop table IF EXISTS movieds.fact_denormalized;
+	create table movieds.fact_denormalized as
+	select f.*, t.year, t.month, t.day,
+	l.location, o.os, d.device, b.browser, s.region, s.latitude, s.longitude, s.latitude ||','||s.longitude as lat_long 
+	from movieds.fact_movie_analytics f
+	left join movieds.dim_date t on (t.id_dim_date=f.id_dim_date)
+	left join movieds.dim_os o on (o.id_dim_os=f.id_dim_os)
+	left join movieds.dim_location l on (l.id_dim_location=f.id_dim_location)
+	left join movieds.dim_devices d on (d.id_dim_devices=f.id_dim_devices)
+	left join movieds.dim_browser b on (b.id_dim_browser=f.id_dim_browser)
+	left join movieds.state s on (s.name=l.location);
+
+
 """
 
 
@@ -288,6 +301,11 @@ drop table if exists movieds.fact_denormalized;
 drop table if exists movieds.review_logs;
 drop table if exists movieds.classified_movie_review;
 drop table if exists movieds.user_purchase;
+drop table IF EXISTS movieds.state;
+drop table IF EXISTS movieds.user_purchase;
+drop table IF EXISTS movieds.classified_movie_review;
+drop table IF EXISTS movieds.stage_review_logs;
+
 ----
 drop table if exists movieds.state;
 
